@@ -1,33 +1,41 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 
 /// 🔐 AUTH STATE
 class AuthState {
   final bool isLoading;
   final String? error;
+  final User? user; // 🔥 ADD THIS
 
   const AuthState({
     this.isLoading = false,
     this.error,
+    this.user,
   });
+
+  bool get isAuthenticated => user != null;
 
   AuthState copyWith({
     bool? isLoading,
     String? error,
+    User? user,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      user: user ?? this.user,
     );
   }
 }
 
-/// 🔐 AUTH NOTIFIER
-class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(const AuthState());
-
+/// 🔐 AUTH NOTIFIER (Modern Riverpod 2.x)
+class AuthNotifier extends Notifier<AuthState> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @override
+  AuthState build() {
+    return const AuthState();
+  }
 
   // 🔐 LOGIN
   Future<void> login(String email, String password) async {
@@ -39,8 +47,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
       );
 
-      // success
-      state = const AuthState(); // 🔥 fully reset clean state
+      print("User after login: ${_auth.currentUser}");
+
+      state = AuthState(
+        isLoading: false,
+        user: _auth.currentUser,
+      );
     } on FirebaseAuthException catch (e) {
       state = AuthState(
         isLoading: false,
@@ -58,8 +70,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final credential =
-      await _auth.createUserWithEmailAndPassword(
+      final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -68,9 +79,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       if (user != null) {
         await user.updateDisplayName(firstName);
+
+        // 🔥 Force refresh user session
+        await user.reload();
       }
 
-      state = const AuthState(); // 🔥 reset clean state
+      state = AuthState(
+        isLoading: false,
+        user: credential.user,
+      );
     } on FirebaseAuthException catch (e) {
       state = AuthState(
         isLoading: false,
@@ -86,7 +103,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       await _auth.signOut();
 
-      state = const AuthState(); // 🔥 VERY IMPORTANT
+      print("USER AFTER LOGOUT: ${_auth.currentUser}");
+
+      state = const AuthState();
     } catch (e) {
       state = AuthState(
         isLoading: false,
@@ -98,6 +117,4 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 /// 🔐 PROVIDER
 final authProvider =
-StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
-});
+NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);

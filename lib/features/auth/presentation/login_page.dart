@@ -9,8 +9,9 @@ import '../../../custom_widget/text_button.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   static String id = 'loginPage';
+  final VoidCallback onSwitch;
 
-  const LoginPage({super.key});
+  const LoginPage({super.key, required this.onSwitch});
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
@@ -155,12 +156,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               onpressed: authState.isLoading
                   ? null
                   : () async {
-                await ref
-                    .read(authProvider.notifier)
-                    .login(
+                await ref.read(authProvider.notifier).login(
                   _emailController.text.trim(),
                   _passwordController.text.trim(),
                 );
+
               },
               child: authState.isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
@@ -179,14 +179,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             children: [
               const Text("Don't have an Account?"),
               MyTextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterPage(),
-                    ),
-                  );
-                },
+                onPressed: widget.onSwitch,
                 text: 'Create Account',
                 color: kprimaryBlue,
                 fontize: 16,

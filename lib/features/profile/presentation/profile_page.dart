@@ -58,12 +58,7 @@ class ProfileScreen extends ConsumerWidget {
                   await ref.read(authProvider.notifier).logout();
 
                   if (context.mounted) {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
-                      ),
-                      (route) => false,
-                    );
+                    Navigator.of(context).popUntil((route) => route.isFirst);
                   }
                 },
 

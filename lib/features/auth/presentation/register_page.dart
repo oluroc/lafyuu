@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lafyuu/custom_widget/button.dart';
 import 'package:lafyuu/features/auth/presentation/providers/auth_provider.dart';
-import 'package:lafyuu/vertical_space.dart';
-
 import '../../../constants.dart';
 import '../../../custom_widget/MyTextField.dart';
+import '../../../vertical_space.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
-  const RegisterPage({super.key});
+  final VoidCallback onSwitch;
+
+  const RegisterPage({super.key, required this.onSwitch});
 
   @override
   ConsumerState<RegisterPage> createState() => _RegisterPageState();
@@ -134,9 +135,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     return;
                   }
 
-                  await ref
-                      .read(authProvider.notifier)
-                      .register(
+                  await ref.read(authProvider.notifier).register(
                     _firstNameController.text.trim(),
                     _emailController.text.trim(),
                     _passwordController.text.trim(),
@@ -146,10 +145,27 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
                   'Register',
-                  style: TextStyle(
-                      color: Colors.white, fontSize: 18),
+                  style:
+                  TextStyle(color: Colors.white, fontSize: 18),
                 ),
               ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // 🔁 SWITCH BACK TO LOGIN
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Already have an Account? "),
+                TextButton(
+                  onPressed: widget.onSwitch,
+                  child: const Text(
+                    "Sign In",
+                    style: TextStyle(color: kprimaryBlue),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 40),
